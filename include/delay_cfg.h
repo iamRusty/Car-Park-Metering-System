@@ -43,7 +43,7 @@
 #define DELAY_ITERATION 498
 #endif
 
-#ifndef CYCLES_PER_S
+#ifndef CYCLES_PER_US
 #define CYCLES_PER_US ((unsigned long)(FCY * 0.000001))   //instruction cycles per microsecond
 #endif 
 
