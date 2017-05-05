@@ -33,6 +33,7 @@
 #endif
 
 #include <xc.h> // include processor files - each processor file is guarded.
+#include <libpic30.h>
 
 #ifndef FCY
 #define	FCY 4000000UL
@@ -42,10 +43,10 @@
 #define DELAY_ITERATION 498
 #endif
 
-#ifndef CYCLES_PER_US
+#ifndef CYCLES_PER_S
 #define CYCLES_PER_US ((unsigned long)(FCY * 0.000001))   //instruction cycles per microsecond
 #endif 
 
-#ifndef CYCLES_PER_US
+#ifndef CYCLES_PER_MS
 #define CYCLES_PER_MS ((unsigned long)(FCY * 0.001))        //instruction cycles per millisecond
 #endif

@@ -10,15 +10,16 @@
 */
 
 // This will optimally work in 4MHz environment
-#define FCY 4000000UL                   // This will optimally work in 4MHz environment
+//#define FCY 4000000UL                   // This will optimally work in 4MHz environment
 #define DECIMAL_POINT_PRECISION 2       // Default 3 decimal points to print
-#define DELAY_ITERATION 248             // Default delay iteration for 4MHz environment 
+//#define DELAY_ITERATION 248             // Default delay iteration for 4MHz environment 
 #include "xc.h"
 #include "stdlib.h"
 #include "libpic30.h"
 #include "lcd_4bit.h"
 #include "string.h"
 #include <stdio.h>
+#include "delay.h"
 
 static int blink_value;
 static int cursor_value;
@@ -27,7 +28,7 @@ static int cursor_pos;
 void send4ToLCD(int instruction_4);
 void send8ToLCD(int instruction_8);
 void lcdWrite(int data_8);
-void delay(int delay_constant);
+//void delay(int delay_constant);
 void lcdInit(void);
 void lcdPrint(char* word);
 void lcdIntPrint(unsigned int value);
@@ -187,10 +188,11 @@ void lcdWrite(int instruction_8){
     LATB = LATB & 0x000F;
     Nop();
     cursor_pos++;
-    __delay_us(100);
+    delay_us(100);
     return;
 }
 
+/*
 void delay(int delay_constant){
     //__delay_ms(delay_constant);
     int count, count2;
@@ -203,7 +205,7 @@ void delay(int delay_constant){
     }
     return;
 
-}
+}*/
 
 void setCursor(int DDRAM_address){
     send8ToLCD(DDRAM_address);

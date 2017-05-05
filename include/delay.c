@@ -7,6 +7,8 @@
  * change it in delay_cfg.h
  */
 
+#include "delay.h"
+
 void delay(int delay_constant);
 void delay_ms(int ms);
 void delay_us(int us);
