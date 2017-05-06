@@ -26,7 +26,8 @@ int main(void) {
     lcdIntPrint(10);
     lcdPrint(" ");
     lcdFloatPrint(3.25);
-    
+    lcdPrint(" ");
+    lcdIntPrint(sizeof("helloworld"));
     while(1){}
     return 0;
 }
