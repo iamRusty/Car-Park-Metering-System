@@ -19,6 +19,7 @@ int main(void) {
     TRISB = 0;
     TRISA = 0;
     AD1PCFG = 0xFDFF;
+    LATB = 0xffff;
     
     lcdInit();
     lcdPrint("helloworld");
