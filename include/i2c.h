@@ -33,6 +33,7 @@
 #endif
 
 #include <xc.h> // include processor files - each processor file is guarded.
+#include "interrupt_cfg.h"
 
 void __attribute__((interrupt, auto_psv)) _MI2C1Interrupt(void);
 void i2c_init(void);

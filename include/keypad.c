@@ -11,7 +11,7 @@
 // This will optimally work in 4MHz environment
 #include "xc.h"
 #include "keypad.h"
-
+#include "interrupt_cfg.h"
 #define DEB_MAX 10
 
 static int key;
@@ -63,6 +63,7 @@ void setKey(int value){
     key = value;
 }
 
+#if __ENABLE_KEYPAD_INTERRUPT_INSIDE_LIBRARY__
 void __attribute__((interrupt)) _CNInterrupt(void){
     int deb_ctr = 0; //debounce counter  
     
@@ -242,3 +243,4 @@ void __attribute__((interrupt)) _CNInterrupt(void){
     /* Clear IRQ flag */
     IFS1bits.CNIF = 0;
 }
+#endif

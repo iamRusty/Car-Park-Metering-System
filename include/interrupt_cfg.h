@@ -20,7 +20,7 @@
  */
 
 /* 
- * File: keypad.h
+ * File: interrupt_cfg.h  
  * Author: Rusty Mina (rusty.mina@eee.upd.edu.ph)
  * Comments:
  * Revision history: 1
@@ -28,19 +28,16 @@
 
 // This is a guard condition so that contents of this file are not included
 // more than once.  
-#ifndef __KEY_P_AD_SALTXZ____
-#define	__KEY_P_AD_SALTXZ____
+#ifndef __interrupt_cfg_____
+#define	__interrupt_cfg_____
 #endif
 
 #include <xc.h> // include processor files - each processor file is guarded.
-#include "interrupt_cfg.h"
 
-void keyOn(void);
-void keyOff(void);
-void keypadInit(void);
-void resetPullup(void);
-void setIsPressed(int value);
-int getIsPressed(void);
-int getKeyValue(void);
-void setKey(int value);
-void __attribute__((interrupt)) _CNInterrupt(void);
+/**************************************
+ *  define 0 if you want to disable 
+ **************************************/
+
+#define __ENABLE_KEYPAD_INTERRUPT_INSIDE_LIBRARY__ 1
+#define __ENABLE_I2C_INTERRUPT_INSIDE_LIBRARY__ 1
+#define __ENABLE_ADC_INTERRUPT_INSIDE_LIBRARY__ 0

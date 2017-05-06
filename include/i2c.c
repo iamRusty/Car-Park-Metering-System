@@ -1,6 +1,7 @@
 #include "xc.h"
 #include "delay.h"
 #include "i2c.h"
+#include "interrupt_cfg.h"
 
 // flags
 static int idle = 1;
@@ -8,6 +9,7 @@ static int acked = 0;
 static int rx_complete = 0;
 static int tx_complete = 0;
 
+#if __ENABLE_I2C_INTERRUPT_INSIDE_LIBRARY__
 void __attribute__((interrupt, auto_psv)) _MI2C1Interrupt(void){
     if (!I2C1STATbits.ACKSTAT){     // ACK received  
         acked = 1;
@@ -26,6 +28,7 @@ void __attribute__((interrupt, auto_psv)) _MI2C1Interrupt(void){
     }
     IFS1bits.MI2C1IF=0;
 }
+#endif
 
 void reset_flags(){
     idle = 1;
