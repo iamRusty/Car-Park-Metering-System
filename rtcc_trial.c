@@ -14,6 +14,10 @@
 #include "xc.h"
 #include "include/lcd_4bit.h"
 
+int bcdToDec(int value){
+    return (value>>4) * 10 + (value & 0x0F);    
+}   
+
 void rtcc_unlock()
 {
     asm volatile("push w7");
@@ -42,10 +46,10 @@ int rtcc_init()
     RCFGCALbits.RTCPTR = 3;
     
     
-    RTCVAL = 0x0017; //year
-    RTCVAL = 0x0507; //month and day
-    RTCVAL = 0x0610; //wkday and hr
-    RTCVAL = 0x0500; //mins secs
+    //RTCVAL = 0x0017; //year
+    //RTCVAL = 0x0507; //month and day
+    //RTCVAL = 0x0610; //wkday and hr
+    //RTCVAL = 0x0500; //mins secs
     
     
     RCFGCALbits.RTCWREN = 0;
@@ -54,60 +58,34 @@ int rtcc_init()
 }
 int get_time()
 {
-    int year, year_10, year_1;
-    int month, month_10, month_1;
-    int day, day_10, day_1;
-    int wday;
-    int hr, hr_1, hr_10;
-    int min, min_1, min_10;
-    int sec, sec_1, sec_10;
+    int year;
+    int month;
+    int day;
+    int hr;
+    int min;
+    int sec;
+    int yr, mthdy, wkdhyr, minsec;
     
     RCFGCALbits.RTCPTR = 3;
-    year = RTCVAL;
-    month = RTCVAL;
-    wday = RTCVAL;
-    min=RTCVAL;
+    yr = RTCVAL;
+    mthdy = RTCVAL;
+    wkdhyr = RTCVAL;
+    minsec = RTCVAL;
     
-    sec_1 = min & 0xF;
-    sec_10 = ((min & 0x00F0) >> 4) * 10;
-    sec = sec_1 + sec_10;
-    
-    min_10 = ((min & 0xF000) >> 12)*10;
-    min_1 = (min & 0x0F00) >> 8;
-    min = min_10 + min_1;
-    
-    year_10 = ((year & 0x00F0) >> 4)*10;
-    year_1 = (year & 0xF);
-    year = year_10 + year_1;
-    
-    month_10 = ((month & 0xF000) >> 12)*10;
-    month_1 = ((month & 0x0F00) >> 8);
-    
-    
-    day_1 = month & 0x00FF;
-    day_10 = ((month & 0x00F0)>>4) * 10;
-    day = day_10 + day_1;
-    
-    hr_10 = ((wday & 0xF0) >> 4)*10;
-    hr_1 = wday & 0xF;
-    hr = hr_10 + hr_1;
-    
-    
-    
-    
-    
+    sec     = bcdToDec(minsec & 0x00FF);
+    min     = bcdToDec((minsec & 0xFF00) >> 8);
+    year    = bcdToDec(yr & 0x00FF);
+    month   = bcdToDec((mthdy & 0xFF00) >> 8);
+    day     = bcdToDec(mthdy & 0x00FF);
+    hr      = bcdToDec(wkdhyr & 0x00FF);
+   
     lcdPrint("YYDDMM HH:mm:ss"); setCursor(0xC0);
-    lcdIntPrint(year); lcdIntPrint(day_10); lcdIntPrint(day_1); lcdIntPrint(month_10);lcdIntPrint(month_1);
-    lcdPrint(" "); lcdIntPrint(hr);
-    lcdPrint(":"); lcdIntPrint(min_10); lcdIntPrint(min_1);
-    lcdPrint(":"); lcdIntPrint(sec_10); lcdIntPrint(sec_1);
+    //lcdTimePrint(year); lcdTimePrint(day); lcdTimePrint(month);
+    //lcdPrint(" "); lcdTimePrint(hr);
+    lcdPrint(":"); lcdTimePrint(min);
+    lcdPrint(":"); lcdTimePrint(sec);
     
     
-    
-    while(1)
-    {
-        
-    }
     
     return 0;
 }
@@ -120,12 +98,13 @@ int main(void) {
     //LATB = 0xffff;
     lcdInit();
     //lcdPrint("Hello");
-    delay(1500);
     
     rtcc_init();
     
     get_time();
-    
+    delay(5000);
+    setCursor(0x80);
+    get_time();
+    while(1){}
    
-    
 }

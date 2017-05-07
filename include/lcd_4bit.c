@@ -57,6 +57,13 @@ void lcdFloatPrint(float float_number){
     return;
 }
 
+void lcdTimePrint(int time){
+    if (time < 10)
+        lcdPrint("0");
+    lcdIntPrint(time);
+    return;
+}
+
 void lcdInit(void){
     // No data should be displayed to or from the display for 15ms
     delay(15);

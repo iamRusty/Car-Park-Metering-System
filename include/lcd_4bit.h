@@ -53,3 +53,4 @@ void clearLine2(void);
 void noBlink(void);
 void noCursor(void);
 int getCursorPos(void);
+void lcdTimePrint(int time);
