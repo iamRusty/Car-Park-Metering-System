@@ -38,14 +38,14 @@ int rtcc_init()
     rtcc_unlock();
     
     RCFGCALbits.RTCEN = 1; //start RTCC
-    RCFGCALbits.RTCOE = 1;
+    //RCFGCALbits.RTCOE = 1;
     RCFGCALbits.RTCPTR = 3;
     
     
     RTCVAL = 0x0017; //year
     RTCVAL = 0x0507; //month and day
     RTCVAL = 0x0610; //wkday and hr
-    RTCVAL = 0x0510; //mins secs
+    RTCVAL = 0x0500; //mins secs
     
     
     RCFGCALbits.RTCWREN = 0;
@@ -55,27 +55,53 @@ int rtcc_init()
 int get_time()
 {
     int year, year_10, year_1;
-    int month, month_r;
+    int month, month_10, month_1;
     int day, day_10, day_1;
+    int wday;
+    int hr, hr_1, hr_10;
+    int min, min_1, min_10;
+    int sec, sec_1, sec_10;
     
     RCFGCALbits.RTCPTR = 3;
     year = RTCVAL;
     month = RTCVAL;
-    //day = RTCVAL & 0x00FF;
+    wday = RTCVAL;
+    min=RTCVAL;
+    
+    sec_1 = min & 0xF;
+    sec_10 = ((min & 0x00F0) >> 4) * 10;
+    sec = sec_1 + sec_10;
+    
+    min_10 = ((min & 0xF000) >> 12)*10;
+    min_1 = (min & 0x0F00) >> 8;
+    min = min_10 + min_1;
+    
     year_10 = ((year & 0x00F0) >> 4)*10;
     year_1 = (year & 0xF);
-    year = 2000 + year_10 + year_1;
+    year = year_10 + year_1;
     
-    month_r = (month &0xFF00) >> 8;
+    month_10 = ((month & 0xF000) >> 12)*10;
+    month_1 = ((month & 0x0F00) >> 8);
+    
+    
     day_1 = month & 0x00FF;
     day_10 = ((month & 0x00F0)>>4) * 10;
     day = day_10 + day_1;
-    lcdPrint("Year: "); lcdIntPrint(year); setCursor(0xC0);
-    lcdPrint("Mo: ");
-    lcdIntPrint(month_r);
-    lcdPrint(" Day: ");
-//    //setCursor(0xc0);
-    lcdIntPrint(day);
+    
+    hr_10 = ((wday & 0xF0) >> 4)*10;
+    hr_1 = wday & 0xF;
+    hr = hr_10 + hr_1;
+    
+    
+    
+    
+    
+    lcdPrint("YYDDMM HH:mm:ss"); setCursor(0xC0);
+    lcdIntPrint(year); lcdIntPrint(day_10); lcdIntPrint(day_1); lcdIntPrint(month_10);lcdIntPrint(month_1);
+    lcdPrint(" "); lcdIntPrint(hr);
+    lcdPrint(":"); lcdIntPrint(min_10); lcdIntPrint(min_1);
+    lcdPrint(":"); lcdIntPrint(sec_10); lcdIntPrint(sec_1);
+    
     
     
     while(1)
