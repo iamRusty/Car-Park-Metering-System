@@ -35,6 +35,6 @@
 #include <xc.h> // include processor files - each processor file is guarded.
 #include "delay_cfg.h" // config header for delay.h
 
-void delay(int delay_constant);
-void delay_ms(int ms);
-void delay_us(int us);
+void delay(unsigned long delay_constant);
+void delay_ms(unsigned long ms);
+void delay_us(unsigned long us);

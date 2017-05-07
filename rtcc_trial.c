@@ -13,15 +13,13 @@
 #pragma config RTCOSC = LPRC //trial
 #include "xc.h"
 #include "include/lcd_4bit.h"
+#include "include/delay.h"
 
 int rtcc_init()
 {
     RCFGCAL = 0;
     RCFGCALbits.RTCWREN = 1;
     RCFGCAL = RCFGCAL | 0b0000011100000000;
-    
-    
-    
     
     RTCVAL = 0x0017; //year
     RTCVAL = 0x0507; //month and day
@@ -47,11 +45,19 @@ int get_time()
     return 0;
 }
 int main(void) {
-    lcdInit();
     AD1PCFG=0xFDFF;
+    TRISB = 0;
+    
+    lcdInit();
     
     rtcc_init();
     
-    get_time();
+    int hello = get_time();
+    delay(70000);
+    hello = get_time();
+    delay(5000);
+    lcdIntPrint(hello);
     
+    while(1){}
+    return 0;
 }

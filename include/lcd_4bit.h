@@ -33,11 +33,15 @@
 #endif
 
 #include <xc.h> // include processor files - each processor file is guarded.
+#include "delay.h"
+#include "string.h"
+#include <stdio.h>
+#include "stdlib.h"
+#include "libpic30.h"
 
 void send4ToLCD(int instruction_4);
 void send8ToLCD(int instruction_8);
 void lcdWrite(int data_8);
-void delay(int delay_constant);
 void lcdInit(void);
 void lcdPrint(char* word);
 void lcdIntPrint(unsigned int value);

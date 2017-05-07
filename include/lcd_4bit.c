@@ -11,31 +11,12 @@
 
 #define DECIMAL_POINT_PRECISION 2       // Default 3 decimal points to print
 #include "xc.h"
-#include "stdlib.h"
-#include "libpic30.h"
 #include "lcd_4bit.h"
-#include "string.h"
-#include <stdio.h>
-#include "delay.h"
+
 
 static int blink_value;
 static int cursor_value;
 static int cursor_pos;
-        
-void send4ToLCD(int instruction_4);
-void send8ToLCD(int instruction_8);
-void lcdWrite(int data_8);
-void lcdInit(void);
-void lcdPrint(char* word);
-void lcdIntPrint(unsigned int value);
-void lcdFloatPrint(float float_number);
-void setCursor(int DDRAM_address);
-void clearDisplay(void);
-void clearLine1(void);
-void clearLine2(void);
-void noBlink(void);
-void noCursor(void);
-int getCursorPos(void);
 
 // Only supports alpha-numeric
 void lcdPrint(char* string){
