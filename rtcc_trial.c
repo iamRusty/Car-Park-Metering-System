@@ -14,10 +14,6 @@
 #include "xc.h"
 #include "include/lcd_4bit.h"
 
-int bcdToDec(int value){
-    return (value>>4) * 10 + (value & 0x0F);    
-}   
-
 void rtcc_unlock()
 {
     asm volatile("push w7");
