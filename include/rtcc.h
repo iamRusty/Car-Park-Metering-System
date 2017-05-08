@@ -22,6 +22,7 @@
 /* 
  * File: rtcc.h  
  * Author: Rusty Mina (rusty.mina@eee.upd.edu.ph)
+           Owen Cabuyadao (jbcabuyadao@up.edu.ph)
  * Comments:
  * Revision history: 1
  */
