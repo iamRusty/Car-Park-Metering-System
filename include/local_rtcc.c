@@ -1,5 +1,5 @@
 #include "xc.h"
-#include "rtcc.h"
+#include "local_rtcc.h"
 
 static void rtccUnlock(void){
     asm volatile("push w7");

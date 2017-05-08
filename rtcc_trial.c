@@ -13,7 +13,7 @@
 #pragma config RTCOSC = LPRC //trial
 #include "xc.h"
 #include "include/lcd_4bit.h"
-#include "include/rtcc.h"
+#include "include/local_rtcc.h"
 
 int main(void) {
     TRISB = 0;
