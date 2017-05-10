@@ -15,6 +15,7 @@
 #include "xc.h"
 #include "include/delay.h"
 #include "include/lcd_4bit.h"
+#include "include/keypad.h"
 
 void getHigh(void);
 void getLow(void);
@@ -27,11 +28,12 @@ int main(void) {
     TRISB = 0;
     AD1PCFG = 0xFDFF;
     lcdInit();
+    keypadInit();
     lcdPrint("helloworld");
     setCursor(0xC0);
     PORTA = 0xFFFF;
 
-#if 0
+#if 1
     while(1){
         LATBbits.LATB11 = 1;
         LATBbits.LATB15 = 0;
@@ -39,6 +41,22 @@ int main(void) {
         LATBbits.LATB11 = 0;
         LATBbits.LATB15 = 1;
         delay(2000);
+       
+        // Reset Pulldown
+        keyOff();
+        resetPullup();
+        keyOn(); 
+        
+        if(getIsPressed()) {
+            setCursor(0xc0);
+        lcdPrint("he");
+        
+            lcdIntPrint(getKeyValue());
+            setIsPressed(0);
+        }
+        else
+            continue;
+            
     }
 #endif 
     
@@ -81,6 +99,6 @@ void theresCar(short state){
     }
     else {
         LATBbits.LATB11 = 0;
-        LATBbits.LATB15 = 1;        
+        LATBbits.LATB15 = 1;
     }
 }
