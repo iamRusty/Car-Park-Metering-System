@@ -5,10 +5,11 @@
 #pragma config I2C1SEL=PRI 
 
 #include "xc.h"
+#include <stdio.h>
 #include "include/delay.h"
 #include "include/lcd_4bit.h"
 #include "include/keypad.h"
-#include <stdio.h>
+#include "include/local_rtcc.h"
 #include "include/i2c.h"
 
 // Main Functions
@@ -17,6 +18,7 @@ void getLow(void);
 void theresCar(short state);
 void eeWrite(long data, int address);
 void eeRead(long data, int address);
+void convTime(long data, rtcc_t input);
 void intToFloat(long i);
 void floatToInt(float f);
 
@@ -149,6 +151,33 @@ void eeRead(long data, int address){
     }
     delay(10);   // THIS DELAY IS IMPORTANT
     i2c_stop(); 
+}
+
+void convTime(long data, rtcc_t input_time){
+    /* Convert rtcc_t time to a eeWrite-ready format
+     * yr - 12 | mon - 4 | mday - 5 | hour - 5 | minute - 6
+     */
+    data = 0;
+    long temp;
+    
+    // Year
+    data = input_time.rtcc_year;
+    data = data << 20;
+    
+    // Month
+    temp = input_time.rtcc_mon;
+    data = data + (temp << 16);
+    
+    // Day
+    temp = input_time.rtcc_day;
+    data = data + (temp << 11);
+
+    // Hour
+    temp = input_time.rtcc_hour;
+    data = data + (temp << 6);
+
+    // Minute
+    data = data + input_time.rtcc_min;    
 }
 
 float intToFloat(long i){

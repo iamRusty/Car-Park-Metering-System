@@ -34,12 +34,12 @@ rtcc_t getTime(void){
     wkdhr = RTCVAL;
     minsec = RTCVAL;
    
-    cur_time.rtcc_sec   = minsec & 0x00FF;
-    cur_time.rtcc_min   = (minsec & 0xFF00) >> 8;
-    cur_time.rtcc_year  = yr & 0x00FF;
-    cur_time.rtcc_mon   = (mthdy & 0xFF00) >> 8;
-    cur_time.rtcc_mday  = mthdy & 0x00FF;
-    cur_time.rtcc_hour  = wkdhr & 0x00FF;
+    cur_time.rtcc_sec   = bcdToDec(minsec & 0x00FF);
+    cur_time.rtcc_min   = bcdToDec((minsec & 0xFF00) >> 8);
+    cur_time.rtcc_year  = bcdToDec(yr & 0x00FF);
+    cur_time.rtcc_mon   = bcdToDec((mthdy & 0xFF00) >> 8);
+    cur_time.rtcc_mday  = bcdToDec(mthdy & 0x00FF);
+    cur_time.rtcc_hour  = bcdToDec(wkdhr & 0x00FF);
     
     return cur_time;
 }
@@ -81,5 +81,5 @@ int decToBCD(int value){
 }
 
 int bcdToDec(int value){
-    return (value >> 4) * 10 + (value & 0x0F);
+    return ((value & 0xF0)>> 4) * 10 + (value & 0x0F);
 }
