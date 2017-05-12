@@ -41,6 +41,7 @@ int main(void) {
     lcdTimePrint(bcdToDec(test2.rtcc_year) + 2000); lcdPrint(" ");
     lcdTimePrint(bcdToDec(test2.rtcc_hour)); lcdPrint(":");
     lcdTimePrint(bcdToDec(test2.rtcc_min)); 
-    while(1);
+    
+    while(1){}
     return 0;
 }

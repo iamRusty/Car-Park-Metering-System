@@ -1,5 +1,6 @@
 #include "xc.h"
 #include "local_rtcc.h"
+#include "lcd_4bit.h"
 
 static void rtccUnlock(void){
     asm volatile("push w7");
@@ -32,13 +33,13 @@ rtcc_t getTime(void){
     mthdy = RTCVAL;
     wkdhr = RTCVAL;
     minsec = RTCVAL;
-    
-    cur_time.rtcc_sec   = bcdToDec(minsec & 0x00FF);
-    cur_time.rtcc_min   = bcdToDec((minsec & 0xFF00) >> 8);
-    cur_time.rtcc_year  = bcdToDec(yr & 0x00FF);
-    cur_time.rtcc_mon   = bcdToDec((mthdy & 0xFF00) >> 8);
-    cur_time.rtcc_mday  = bcdToDec(mthdy & 0x00FF);
-    cur_time.rtcc_hour  = bcdToDec(wkdhr & 0x00FF);
+   
+    cur_time.rtcc_sec   = minsec & 0x00FF;
+    cur_time.rtcc_min   = (minsec & 0xFF00) >> 8;
+    cur_time.rtcc_year  = yr & 0x00FF;
+    cur_time.rtcc_mon   = (mthdy & 0xFF00) >> 8;
+    cur_time.rtcc_mday  = mthdy & 0x00FF;
+    cur_time.rtcc_hour  = wkdhr & 0x00FF;
     
     return cur_time;
 }
@@ -48,22 +49,22 @@ void setTime(rtcc_t input_time){
     
     // Year
     yr = decToBCD(input_time.rtcc_year);
-
+    
     // Month and Calendar Day
     mthdy = decToBCD(input_time.rtcc_mon);
     mthdy = mthdy << 8;
     mthdy = mthdy + decToBCD(input_time.rtcc_mday);
-
+    
     // Weekday and Hour
     wkdhr = decToBCD(input_time.rtcc_wday);
     wkdhr = wkdhr << 8;
-    wkdhr = wkdhr + decToBCD(input_time.rtcc_sec);
-
+    wkdhr = wkdhr + decToBCD(input_time.rtcc_hour);
+    
     // Minute and Seconds
     minsec = decToBCD(input_time.rtcc_min);
     minsec = minsec << 8;
     minsec = minsec + decToBCD(input_time.rtcc_sec);
-
+    
     RCFGCALbits.RTCWREN = 1;    
     RCFGCALbits.RTCPTR = 3;
     RTCVAL = yr;
@@ -80,5 +81,5 @@ int decToBCD(int value){
 }
 
 int bcdToDec(int value){
-    return (value>>4) * 10 + (value & 0x0F);    
+    return (value >> 4) * 10 + (value & 0x0F);
 }

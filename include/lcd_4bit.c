@@ -35,9 +35,9 @@ void lcdPrint(char* string){
     return;
 }
 
-void lcdIntPrint(unsigned int value){
+void lcdIntPrint(long value){
     char __string_buffer__[16];
-    sprintf(__string_buffer__, "%d", value);
+    sprintf(__string_buffer__, "%li", value);
     lcdPrint(__string_buffer__);
     return;
 }
@@ -57,7 +57,7 @@ void lcdFloatPrint(float float_number){
     return;
 }
 
-void lcdTimePrint(int time){
+void lcdTimePrint(long time){
     if (time < 10)
         lcdPrint("0");
     lcdIntPrint(time);
