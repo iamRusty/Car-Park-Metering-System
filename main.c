@@ -1,10 +1,3 @@
-/*
- * File:   main.c
- * Author: Rusty
- *
- * Created on May 10, 2017, 12:13 PM
- */
-
 #pragma config FWDTEN=OFF, JTAGEN=OFF
 #pragma config POSCMOD=NONE, OSCIOFNC=ON, FCKSM=CSDCMD, FNOSC=FRCPLL 
 #pragma config PLL96MHZ=OFF, PLLDIV=NODIV
@@ -18,19 +11,26 @@
 #include <stdio.h>
 #include "include/i2c.h"
 
+// Main Functions
 void getHigh(void);
 void getLow(void);
 void theresCar(short state);
-void eeTime(long data, int address);
+void eeWrite(long data, int address);
+void eeRead(long data, int address);
 void intToFloat(long i);
 void floatToInt(float f);
 
+// Main Data types
 union fi_t{
     float f;
     long i;
 };
 
-int count; 
+
+// Main Variables
+int count;
+
+
 int main(void) {
     TRISA = 0xFFFF;
     TRISB = 0;
@@ -110,7 +110,7 @@ void theresCar(short state){
     }
 }
 
-void eeData(long data, int address){
+void eeWrite(long data, int address){
     char *ad_ptr = &address;           // Address to be written at
     i2c_start();                       // Start I2C
     i2c_tx(0b10100000);                // Send EEPROM CTRL byte with Write enabled
@@ -118,14 +118,37 @@ void eeData(long data, int address){
     i2c_tx(*ad_ptr);                   // Send EEPROM Low Address
     
     char *d_ptr = &data;
-    int count2 = 0;
-    while (count2 < 4){
-        i2c_tx(*(d_ptr+count2));
-        count2++;
+    int count = 0;
+    while (count < 4){
+        i2c_tx(*(d_ptr+count));
+        count++;
     }
     
     i2c_stop();
     delay(10);
+}
+
+void eeRead(long data, int address){
+    char *d_ptr = &data;
+    char *ad_ptr  = &address;
+    i2c_start();                // send I2C start sequence
+    i2c_tx(0b10100000);         // send EEPROM CTRL byte with Write enabled
+    i2c_tx(*(ad_ptr+1));        // Send EEPROM High Address
+    i2c_tx(*ad_ptr);            // Send EEPROM Low Address
+    
+    i2c_start();                // send I2C restart sequence
+    i2c_tx(0b10100001);         // send EEPROM CTRL byte with Read enabled
+    
+    int count = 0;
+    while (count < 4){
+        *(d_ptr + count) = i2c_rx();
+        if (count < 3)
+            send_ack();
+        
+        count++;
+    }
+    delay(10);   // THIS DELAY IS IMPORTANT
+    i2c_stop(); 
 }
 
 float intToFloat(long i){
