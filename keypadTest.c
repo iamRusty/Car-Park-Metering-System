@@ -20,7 +20,7 @@ int main(void) {
     
     AD1PCFG = 0xffff;
     TRISA = 0xFFFF;  //All input
-    TRISB = 0x0000;  //All output
+    TRISB = 0x9B40;  //All output
     LATB = 0xffff;
     
     lcdInit();
