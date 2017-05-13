@@ -19,6 +19,8 @@
 // Main Functions
 void dataDispMode(void);
 void printDataPoint(int addr, int half);
+void countData(void);
+void findOldNew(void);
 void getHigh(void);
 void getLow(void);
 float askRate(void);
@@ -47,7 +49,7 @@ typedef union fi_t{
 // Main Variables
 int counter, newest_addr, oldest_addr;
 char start_time[17] = "__:__ __/__/20__";
-int data_count = 4; // must be 50
+int data_count = 0; // must be 50
 
 int main(void) {
 
@@ -60,7 +62,7 @@ int main(void) {
     rtccInit();
 
     
-    // Get Start Time
+// Get Start Time
 #if 0
     getStartTime();
     setTime(parseStartTime());
@@ -79,7 +81,9 @@ int main(void) {
     //displayRTCCTime(trial_time);    
     while(1){}
 #endif    
-    
+
+
+// Ask Rate    
 #if 0
     float asd;
     eeWrite(0, 0x1FFA);
@@ -87,7 +91,7 @@ int main(void) {
     while(1){}
 #endif   
     
-    //Data Display Mode TEST
+//Data Display Mode TEST
 #if 1
     rtcc_t rt, rt2;
     rt.rtcc_hour = 11;
@@ -119,10 +123,22 @@ int main(void) {
     eeWrite(convTime(getTime()), 10 * 4);
     eeWrite(convTime(rt2), 11 * 4);
     
-    dataDispMode();
-    while(1){}
+    //dataDispMode();
+    //while(1){}
 #endif
+
+// EEPROM reformat TEST
+#if 1
+    eeClean();
+    //dataDispMode();
+#endif     
     
+#if 1
+    lcdPrint("helloworld ");
+    countData();
+    lcdIntPrint(data_count);
+    while(1){}
+#endif 
     long hello2 = 67;
     eeWrite(70, 0);
     eeWrite(69, 1);
@@ -209,6 +225,54 @@ void printDataPoint(int address, int half){
     lcdFloatPrint(intToFloat(l1));
     setCursor(0xC0);
     displayEETime(l2);
+}
+
+void countData(void){
+    /*
+     * If the whole datapoint is 0 then noty
+     */
+    data_count = 0;
+    long l1,l2,l3;
+    while (data_count < 50){
+        eeRead(&l1, data_count * 12);
+        eeRead(&l2, data_count * 12 + 4);
+        eeRead(&l3, data_count * 12 + 8);
+        
+        if ((l1 != 0) || (l2 != 0) || (l3 != 0))
+            data_count++;
+        else
+            break;
+    }
+}
+
+void findOldNew(void){
+    /*
+     *  Check only the start_time of data points
+     */
+    
+    int count = 0;
+    long current, previous = 0;
+    while(count < data_count){
+        eeRead(&current, count * 12 + 4);
+        if (current >= previous){
+            previous = current;
+            count++;
+        }
+        else
+            break;
+    }
+    
+    if (count == 0) {
+        newest_addr = 0;
+        oldest_addr = 0;
+    }
+    else {
+        newest_addr = count - 1;
+        if (data_count < 51)
+            oldest_addr = 0;
+        else 
+            oldest_addr = count;
+    }
 }
 
 void getHigh(){
@@ -395,19 +459,11 @@ void eeRead(long *data, int address){
 }
 
 void eeClean(void){
-    i2c_start();            // send I2C start sequence
-    i2c_tx(0b10100000);     // send EEPROM CTRL byte with Write enabled
-    i2c_tx(0);              // Send EEPROM High Address
-    i2c_tx(0);              // Send EEPROM Low Address
-
     int count = 0;
-    while (count < 4){
-        i2c_tx(0);
+    while(count < 153){
+        eeWrite(0, count * 4);
         count++;
     }
-    
-    i2c_stop();
-    delay(10);
 }
 
 long convTime(rtcc_t input_time){
