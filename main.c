@@ -100,7 +100,7 @@ int main(void) {
     rt.rtcc_mon = 12;
     rt.rtcc_sec = 00;
     rt.rtcc_wday = 0;
-    rt.rtcc_year = 17;
+    rt.rtcc_year = 16;
     rt2.rtcc_hour = 10;
     rt2.rtcc_mday = 23;
     rt2.rtcc_min = 13;
@@ -109,7 +109,7 @@ int main(void) {
     rt2.rtcc_wday = 0;
     rt2.rtcc_year = 17;
     
-    setTime(rt);
+    setTime(rt2);
     eeWrite(floatToInt(3.25), 0 * 4);
     eeWrite(convTime(getTime()), 1 * 4);
     eeWrite(convTime(rt2), 2 * 4);
@@ -117,7 +117,7 @@ int main(void) {
     eeWrite(convTime(getTime()), 4 * 4);
     eeWrite(convTime(rt2), 5 * 4);
     eeWrite(floatToInt(6.25), 6 * 4);
-    eeWrite(convTime(getTime()), 7 * 4);
+    eeWrite(convTime(rt), 7 * 4);
     eeWrite(convTime(rt2), 8 * 4);
     eeWrite(floatToInt(7.80), 9 * 4);
     eeWrite(convTime(getTime()), 10 * 4);
@@ -127,18 +127,28 @@ int main(void) {
     //while(1){}
 #endif
 
-// EEPROM reformat TEST
+    // EEPROM reformat TEST
 #if 1
-    eeClean();
+    //eeClean(0);
     //dataDispMode();
 #endif     
-    
+
 #if 1
     lcdPrint("helloworld ");
     countData();
     lcdIntPrint(data_count);
+    //while(1){}
+#endif     
+    
+    // Find Newest and Oldest address TEST
+#if 1
+    findOldNew();
+    setCursor(0xC0);
+    lcdIntPrint(oldest_addr); lcdPrint(" ");
+    lcdIntPrint(newest_addr);
     while(1){}
-#endif 
+#endif
+
     long hello2 = 67;
     eeWrite(70, 0);
     eeWrite(69, 1);
@@ -210,7 +220,6 @@ void dataDispMode(void){
             setIsPressed(0);
         }
     }
-    
 }
 
 void printDataPoint(int address, int half){
@@ -268,8 +277,10 @@ void findOldNew(void){
     }
     else {
         newest_addr = count - 1;
-        if (data_count < 51)
+        if (data_count < 51){
             oldest_addr = 0;
+            eeClean(count * 3); // Because it's a fallacy
+        }
         else 
             oldest_addr = count;
     }
@@ -298,7 +309,7 @@ void theresCar(short state){
     }
 }
 
-void getStartTime(void){
+void getStartTime(void){ // A blocking function
     int key, cpos = 0x80, done = 0, asterisk = 0;
     
     while(!done){
@@ -400,7 +411,9 @@ void displayRTCCTime(rtcc_t input){
     lcdTimePrint(input.rtcc_min);
 }
 
-float askRate(void){
+float askRate(void){ // A blocking function
+    
+    // Check if there's rate in 0x1FFA
     long i_price = 0;
     eeRead(&i_price, 0x1FFA);
     fi_t fi_price;
@@ -458,8 +471,7 @@ void eeRead(long *data, int address){
     i2c_stop();
 }
 
-void eeClean(void){
-    int count = 0;
+void eeClean(int count){
     while(count < 153){
         eeWrite(0, count * 4);
         count++;
