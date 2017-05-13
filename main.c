@@ -17,10 +17,12 @@
 #include "include/i2c.h"
 
 // Main Functions
+void dataDispMode(void);
+void printDataPoint(int addr, int half);
 void getHigh(void);
 void getLow(void);
 float askRate(void);
-void convTime(long *data, rtcc_t input);
+long convTime(rtcc_t input);
 rtcc_t deconvTime(long input);
 void getStartTime(void);
 rtcc_t parseStartTime(void);
@@ -43,8 +45,9 @@ typedef union fi_t{
 
 
 // Main Variables
-int counter;
+int counter, newest_addr, oldest_addr;
 char start_time[17] = "__:__ __/__/20__";
+int data_count = 4; // must be 50
 
 int main(void) {
 
@@ -56,7 +59,9 @@ int main(void) {
     keypadInit();
     rtccInit();
 
-#if 1
+    
+    // Get Start Time
+#if 0
     getStartTime();
     setTime(parseStartTime());
     rtcc_t trial_time;
@@ -75,14 +80,49 @@ int main(void) {
     while(1){}
 #endif    
     
-    
-    
-#if 0    
+#if 0
     float asd;
     eeWrite(0, 0x1FFA);
     asd = askRate();
     while(1){}
-#endif     
+#endif   
+    
+    //Data Display Mode TEST
+#if 1
+    rtcc_t rt, rt2;
+    rt.rtcc_hour = 11;
+    rt.rtcc_mday = 25;
+    rt.rtcc_min = 21;
+    rt.rtcc_mon = 12;
+    rt.rtcc_sec = 00;
+    rt.rtcc_wday = 0;
+    rt.rtcc_year = 17;
+    rt2.rtcc_hour = 10;
+    rt2.rtcc_mday = 23;
+    rt2.rtcc_min = 13;
+    rt2.rtcc_mon = 11;
+    rt2.rtcc_sec = 00;
+    rt2.rtcc_wday = 0;
+    rt2.rtcc_year = 17;
+    
+    setTime(rt);
+    eeWrite(floatToInt(3.25), 0 * 4);
+    eeWrite(convTime(getTime()), 1 * 4);
+    eeWrite(convTime(rt2), 2 * 4);
+    eeWrite(floatToInt(5.25), 3 * 4);
+    eeWrite(convTime(getTime()), 4 * 4);
+    eeWrite(convTime(rt2), 5 * 4);
+    eeWrite(floatToInt(6.25), 6 * 4);
+    eeWrite(convTime(getTime()), 7 * 4);
+    eeWrite(convTime(rt2), 8 * 4);
+    eeWrite(floatToInt(7.80), 9 * 4);
+    eeWrite(convTime(getTime()), 10 * 4);
+    eeWrite(convTime(rt2), 11 * 4);
+    
+    dataDispMode();
+    while(1){}
+#endif
+    
     long hello2 = 67;
     eeWrite(70, 0);
     eeWrite(69, 1);
@@ -103,6 +143,73 @@ int main(void) {
     while(1){}
     return 0;
 } 
+
+void dataDispMode(void){
+    int cur_addr = 0;
+    int key_val, half = 0;
+    
+    newest_addr = 3;
+    
+    printDataPoint(0, 0);
+    while(1){
+        resetPullup();
+        if (!getIsPressed()){
+            continue;
+        }
+        else {
+            key_val = getKeyValue();
+            if (key_val == 2){
+                if (cur_addr + 1 == data_count)
+                    cur_addr = 0;
+                else
+                    cur_addr++;
+                half = 0;
+            }
+            else if (key_val == 8){
+                if (cur_addr == 0)
+                    cur_addr = data_count - 1;
+                else
+                    cur_addr--;
+                half = 0;
+            }
+            else if (key_val == 1){
+                cur_addr = oldest_addr;
+                half = 0;
+            }
+            else if (key_val == 9){
+                cur_addr = newest_addr;
+                half = 0;
+            }
+            else if (key_val == 4){
+                if (!half)
+                    continue;
+                half = 0;
+            }
+            else if (key_val == 6){
+                if (half)
+                    continue;
+                half = 1; 
+            }
+            printDataPoint(cur_addr, half);
+            setIsPressed(0);
+        }
+    }
+    
+}
+
+void printDataPoint(int address, int half){
+    long l1, l2;
+    eeRead(&l1, address * 12);
+    if (half)
+        eeRead(&l2, address * 12 + 8);
+    else 
+        eeRead(&l2, address * 12 + 4);
+    
+    setCursor(0x80);
+    lcdFloatPrint(intToFloat(l1));
+    setCursor(0xC0);
+    displayEETime(l2);
+}
 
 void getHigh(){
     while(PORTAbits.RA4 == 0){
@@ -228,6 +335,7 @@ void displayRTCCTime(rtcc_t input){
     lcdTimePrint(input.rtcc_hour); lcdPrint(":");
     lcdTimePrint(input.rtcc_min);
 }
+
 float askRate(void){
     long i_price = 0;
     eeRead(&i_price, 0x1FFA);
@@ -302,31 +410,33 @@ void eeClean(void){
     delay(10);
 }
 
-void convTime(long *data, rtcc_t input_time){
+long convTime(rtcc_t input_time){
     /* Convert rtcc_t time to a eeWrite-ready format
      * yr - 12 | mon - 4 | mday - 5 | hour - 5 | minute - 6
      */
-    *data = 0;
+    long data = 0;
     long temp;
     
     // Year
-    *data = input_time.rtcc_year;
-    *data = *data << 20;
+    data = input_time.rtcc_year;
+    data = data << 20;
     
     // Month
     temp = input_time.rtcc_mon;
-    *data = *data + (temp << 16);
+    data = data + (temp << 16);
     
     // Day
     temp = input_time.rtcc_mday;
-    *data = *data + (temp << 11);
+    data = data + (temp << 11);
 
     // Hour
     temp = input_time.rtcc_hour;
-    *data = *data + (temp << 6);
+    data = data + (temp << 6);
 
     // Minute
-    *data = *data + input_time.rtcc_min;    
+    data = data + input_time.rtcc_min;  
+    
+    return data;
 }
 
 rtcc_t deconvTime(long input){
