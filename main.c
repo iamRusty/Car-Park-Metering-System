@@ -24,6 +24,7 @@ void findOldNew(void);
 void getHigh(void);
 void getLow(void);
 float askRate(void);
+void scanFloat(float *addr);
 long convTime(rtcc_t input);
 rtcc_t deconvTime(long input);
 void getStartTime(void);
@@ -37,7 +38,7 @@ float intToFloat(long i);
 // EEPROM Functions
 void eeWrite(long data, int address);
 void eeRead(long *data, int address);
-void eeClean(void);
+void eeClean(int count);
 
 // Main Data types
 typedef union fi_t{
@@ -92,7 +93,7 @@ int main(void) {
 #endif   
     
 //Data Display Mode TEST
-#if 1
+#if 0
     rtcc_t rt, rt2;
     rt.rtcc_hour = 11;
     rt.rtcc_mday = 25;
@@ -128,12 +129,19 @@ int main(void) {
 #endif
 
     // EEPROM reformat TEST
-#if 1
+#if 0
     //eeClean(0);
     //dataDispMode();
 #endif     
-
+    
+    // Ask Rate TEST
 #if 1
+    askRate();
+    while(1){}
+#endif    
+    
+    // Counting Datapoints TEST
+#if 0
     lcdPrint("helloworld ");
     countData();
     lcdIntPrint(data_count);
@@ -417,17 +425,118 @@ float askRate(void){ // A blocking function
     long i_price = 0;
     eeRead(&i_price, 0x1FFA);
     fi_t fi_price;
-    fi_price.i = i_price;      
+    fi_price.i = i_price;
+    float f;
     
     if ((i_price == 0)||(i_price == 0xFFFFFFFF)){
-        setCursor(0x80);
-        lcdPrint("Enter Rate:");
-        setCursor(0xC0);
-        while(1){}
-        return 3.25;
+        scanFloat(&f);
     }
     else {
         return fi_price.f;
+    }
+    return f;
+}
+
+void scanFloat(float *addr){ // A blocking function
+    clearLine1();
+    lcdPrint("Enter Rate:");
+    char f_string1[17] = "Integer:        ";
+    char f_string2[17] = "Decimal:        ";
+    short key, cpos, done = 0;
+    while(!done){
+        
+        // Integer Part
+        clearLine2();    
+        lcdPrint(f_string1);
+        setCursor(0xC9);
+        while(1){
+            resetPullup();
+            if (!getIsPressed())
+                continue;
+            else {
+                key = getKeyValue();
+                cpos = getCursorPos();
+                if (key == 10){
+                    if (cpos != 0xC9){
+                        setCursor(cpos - 1);
+                    }
+                }
+                else if (key == 11){
+                    if (cpos >= (0xC0 + 15)){
+                        setIsPressed(0);
+                        break;
+                    }
+                    else {
+                        setCursor(cpos + 1);
+                    }
+                }
+                else {
+                    if (cpos == 0xC9){
+                        Nop();
+                    }
+                    else if (f_string1[cpos - 0xC0 - 1] == ' '){
+                        continue;
+                    }
+                    lcdIntPrint(key);
+                    f_string1[cpos - 0xC0] = key + '0';   
+                }
+                setIsPressed(0);
+            }
+        }
+        
+        // Fractional part
+        clearLine2();
+        lcdPrint(f_string2);
+        setCursor(0xC9);
+        while(1){
+            resetPullup();
+            if (!getIsPressed())
+                continue;
+            else {
+                key = getKeyValue();
+                cpos = getCursorPos();
+                if (key == 10){
+                    if (cpos != 0xC9){
+                        setCursor(cpos - 1);
+                    }
+                }
+                else if (key == 11){
+                    if (cpos >= (0xC0 + 15)){
+                        setIsPressed(0);
+                        done = 1;
+                        break;
+                    }
+                    else {
+                        setCursor(cpos + 1);
+                    }
+                }
+                else {
+                    if (cpos == 0xC9){
+                        Nop();
+                    }
+                    else if (f_string2[cpos - 1 - 0xC0] == ' '){
+                        continue;
+                    }
+                    lcdIntPrint(key);
+                    f_string2[cpos - 0xC0] = key + '0';
+                }
+                setIsPressed(0);
+            }
+        }   
+    }
+    clearLine1();
+    lcdPrint(f_string1);
+    clearLine2();
+    lcdPrint(f_string2);
+    //int integer, decimal;
+    //integer = parseNumber(string1)
+}
+
+long parseNumber(char *string){
+    int count, count2;
+    count = 0;
+    while(count < 16){
+        if (*())
     }
 }
 
