@@ -5,8 +5,8 @@
 #pragma config I2C1SEL=PRI 
 #pragma config RTCOSC = LPRC
 
-#define TRUE 1
-#define FALSE 0
+#define _INTEGER 0
+#define _DECIMAL 1
 
 #include "xc.h"
 #include <stdio.h>
@@ -23,8 +23,9 @@ void countData(void);
 void findOldNew(void);
 void getHigh(void);
 void getLow(void);
-float askRate(void);
+void askRate(void);
 void scanFloat(float *addr);
+long parseNumber(char *string, int d_type);
 long convTime(rtcc_t input);
 rtcc_t deconvTime(long input);
 void getStartTime(void);
@@ -136,7 +137,9 @@ int main(void) {
     
     // Ask Rate TEST
 #if 1
+    //eeWrite(0, 0x1FFA);
     askRate();
+    clearLine2(); lcdPrint("Working!!! 3x");
     while(1){}
 #endif    
     
@@ -419,7 +422,7 @@ void displayRTCCTime(rtcc_t input){
     lcdTimePrint(input.rtcc_min);
 }
 
-float askRate(void){ // A blocking function
+void askRate(void){ // A blocking function
     
     // Check if there's rate in 0x1FFA
     long i_price = 0;
@@ -427,14 +430,34 @@ float askRate(void){ // A blocking function
     fi_t fi_price;
     fi_price.i = i_price;
     float f;
-    
+    int key;
     if ((i_price == 0)||(i_price == 0xFFFFFFFF)){
         scanFloat(&f);
+        eeWrite(floatToInt(f), 0x1FFA);
     }
     else {
-        return fi_price.f;
+        clearLine1();
+        lcdPrint("Rate: "); lcdFloatPrint(fi_price.f);
+        clearLine2();
+        lcdPrint("Change? *-N  #-Y");
+        while(1){
+            resetPullup();
+            if (!getIsPressed()){
+                continue;
+            }
+            else {
+                key = getKeyValue();
+                if (key == 11){
+                    scanFloat(&f);
+                    eeWrite(floatToInt(f), 0x1FFA);
+                    break;
+                }
+                else if (key == 10){
+                    break;
+                }
+            }
+        }
     }
-    return f;
 }
 
 void scanFloat(float *addr){ // A blocking function
@@ -528,16 +551,66 @@ void scanFloat(float *addr){ // A blocking function
     lcdPrint(f_string1);
     clearLine2();
     lcdPrint(f_string2);
-    //int integer, decimal;
-    //integer = parseNumber(string1)
+    //while(1){}
+    long integer, decimal;
+    integer = parseNumber(f_string1, _INTEGER);
+    decimal = parseNumber(f_string2, _DECIMAL);
+    
+    float temp = decimal;
+    temp = temp / 100;
+    *addr = integer;
+    *addr = *addr + temp;
 }
 
-long parseNumber(char *string){
-    int count, count2;
+long parseNumber(char *string, int d_type){
+    int count, count2, count3, start, end;
+    setCursor(0xC0 + 13);
     count = 0;
-    while(count < 16){
-        if (*())
+    
+    // Get Start locus
+    while (count < 16){
+        if ((*(string + count) < '0') || 
+            (*(string + count) > '9'))
+            count++;
+        else
+            break;
     }
+    start = count;
+    
+    // Get End locus
+    while (count < 16){
+        if ((*(string + count) >= '0') &&
+            (*(string + count) <= '9'))
+            count++;
+        else
+            break;
+    }
+    end = count;
+    
+    // If DECIMAL, send only 2 of the MSB because centavos ???
+    if (d_type == _DECIMAL){
+        if (end - start == 1)
+            return (*(string + 9) - '0') * 10;
+        return (*(string + 9) - '0') * 10 + *(string + 10) - '0';
+    }
+    
+    // String to Integer
+    long temp, number = 0;
+    count = end - start;
+    count3 = 0;
+    clearLine1();
+    while (count > 0){
+        count2 = 1; 
+        temp = 1;
+        while (count2 < count){
+            temp = temp * 10;
+            count2++;
+        }
+        number = number + (*(string + count3 + 9) - '0') * temp;
+        count--;
+        count3++;
+    }
+    return number;
 }
 
 void eeWrite(long data, int address){
