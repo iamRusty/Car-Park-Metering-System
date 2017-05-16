@@ -24,28 +24,28 @@ void __attribute__ ((interrupt, auto_psv)) _IC1Interrupt(void);
 void setup()
 {
     __builtin_write_OSCCONL(OSCCON & (~(1<<6)));
-    RPINR7bits.IC1R = 7; //set RB7 as input for InCap
+    RPINR7bits.IC1R = 15; //set RB15 as input for InCap
      __builtin_write_OSCCONL(OSCCON|(1<<6));
 }
 void incapInit()
 {
     int clear;
-    TRISB = 0x0080; //set RB7 as input pin
-    //AD1PCFG = 0x7FFF; //set all pins to digital except for pin 16(rb7)
+    TRISB = 0x8000; //set RB15 as input pin
+    AD1PCFG = 0xFDFF; //set all pins to digital except for pin an9(rb15)
     setup();
     IC1CON1 = 0;
     
-    
+    //ensure that IC1BUF is empty
     while(IC1CON1bits.ICBNE){
         clear = IC1BUF;
     }
     
     
     
-    IC1CON2bits.SYNCSEL = 0b10100; //select InCap1 as trigger
+    IC1CON2bits.SYNCSEL = 0b10100; //select InCap1 as trigger/sync
     
     IC1CON1bits.ICSIDL = 1;
-    IC1CON1bits.ICTSEL = 4; //Timer 1
+    IC1CON1bits.ICTSEL = 4; //Timer 1 as timer sync
     IC1CON1bits.ICI = 1; //interrupt on every 2nd capture event
     
     IC1CON2bits.ICTRIG = 0;
@@ -81,6 +81,7 @@ int main(void) {
         lcdIntPrint(width);
         setCursor(0xC0);
         lcdIntPrint(width2);
+        setCursor(0xA0);
     }
     
     
