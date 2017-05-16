@@ -46,7 +46,7 @@ void incapInit()
     
     IC1CON1bits.ICSIDL = 1;
     IC1CON1bits.ICTSEL = 4; //Timer 1 as timer sync
-    IC1CON1bits.ICI = 1; //interrupt on every 2nd capture event
+    //IC1CON1bits.ICI = 1; //interrupt on every 2nd capture event
     
     IC1CON2bits.ICTRIG = 0;
     
@@ -68,20 +68,26 @@ void timerInit()
 
 int main(void) {
     
-    unsigned int width, width2;
-    
+    unsigned int width, width2, width_diff;
+    int ctr=0;
     timerInit();
     incapInit();
     
     while(1)
     {
-        width = Capture2 - Capture1;
-        width2 = Capture1 - Capture2;
-        
-        lcdIntPrint(width);
-        setCursor(0xC0);
-        lcdIntPrint(width2);
-        setCursor(0xA0);
+        if(ctr==1)
+            width = Capture1;
+        if(ctr==2)
+        {
+            width2 = Capture1;
+            width_diff = width2 - width;
+            lcdIntPrint(width_diff);
+            setCursor(0xC0);
+            lcdIntPrint(width2);
+            lcdPrint("  ");
+            lcdIntPrint(width1)
+            ctr=0;
+        }
     }
     
     
@@ -93,6 +99,7 @@ void __attribute__ ((interrupt, auto_psv)) _IC1Interrupt(void)
 {
     
     Capture1 = IC1BUF; // Read and save off first capture entry
-    Capture2 = IC1BUF; // Read and save off second capture entry
+    ctr++;
+    //Capture2 = IC1BUF; // Read and save off second capture entry
     IFS0bits.IC1IF = 0; // Reset respective interrupt flag
 }
