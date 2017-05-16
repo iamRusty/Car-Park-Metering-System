@@ -46,7 +46,7 @@ void incapInit()
     
     IC1CON1bits.ICSIDL = 1;
     IC1CON1bits.ICTSEL = 4; //Timer 1 as timer sync
-    IC1CON1bits.ICI = 0; //interrupt on every capture event
+    //IC1CON1bits.ICI = 1; //interrupt on every 2nd capture event
     
     IC1CON2bits.ICTRIG = 0;
     
@@ -66,10 +66,12 @@ void timerInit()
     T1CONbits.TON = 1; //start timer
 }
 
+int ctr = 0;
+
 int main(void) {
     
     unsigned int width, width2, width_diff;
-    
+
     timerInit();
     incapInit();
     
@@ -85,6 +87,7 @@ int main(void) {
             setCursor(0xC0);
             lcdIntPrint(width2);
             lcdPrint("  ");
+
             lcdIntPrint(width);
             ctr=0;
         }
