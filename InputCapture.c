@@ -46,7 +46,7 @@ void incapInit()
     
     IC1CON1bits.ICSIDL = 1;
     IC1CON1bits.ICTSEL = 4; //Timer 1 as timer sync
-    //IC1CON1bits.ICI = 1; //interrupt on every 2nd capture event
+    IC1CON1bits.ICI = 0; //interrupt on every capture event
     
     IC1CON2bits.ICTRIG = 0;
     
