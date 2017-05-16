@@ -88,7 +88,6 @@ int main(void) {
             lcdIntPrint(width1)
             ctr=0;
         }
-        
     }
     
     
