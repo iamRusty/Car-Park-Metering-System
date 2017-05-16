@@ -92,18 +92,31 @@ int main(void) {
     lcdIntPrint(newest_addr); delay(2000);
     while(1){
         meteringMode();
-        //dataDispMode();
+        countData();
+        findOldNew();
+        dataDispMode();
     }
 #endif    
     
-#if 0
+#if 1
     countData();
     findOldNew();
     dataDispMode();
+    clearLine1();
+    lcdPrint("helloworld");
+#endif
+    
+#if 0
+    meteringMode();
 #endif
     
 #if 1
-    meteringMode();
+    while(1){
+        meteringMode();
+        countData();
+        findOldNew();
+        dataDispMode();
+    }    
 #endif
 // Get Start Time
 #if 0
@@ -226,14 +239,15 @@ void meteringMode(void){
     lcdPrint("Ruler Mode");
     
     // Get Rate from EEPROM
-    long temp;
+    long temp, iwashere;
     eeRead(&temp, 0x1FFA);
     float rate = intToFloat(temp);
     lcdFloatPrint(rate);
-    delay(5000);
+    delay(1000);
 
     int count = 0;
-    while(1){
+    int key_val, alisnaboi = 0;
+    while(!alisnaboi){
         
         // Blocking for car presence
         getPulseWidth();
@@ -243,7 +257,20 @@ void meteringMode(void){
         else {
             tagalmo = 0;
             enableAlarm();
+            clearLine1();
+            lcdPrint("Utang: "); lcdFloatPrint(rate * (tagalmo + 1));
+            iwashere = convTime(getTime());
             while(1) {
+                if (getIsPressed()){
+                    key_val = getKeyValue();
+                    if (key_val == 11){
+                        alisnaboi = 1;
+                        setIsPressed(0);
+                        break;
+                    }
+                        
+                }
+                    
                 if (rtcc_flag){
                     tagalmo++;
                     rtcc_flag = 0;
@@ -261,10 +288,10 @@ void meteringMode(void){
         clearLine1();
         lcdIntPrint(count);
         eeWrite(floatToInt(rate * (tagalmo+1)) , count * 12 + 0);
-        eeWrite(convTime(getTime()), count * 12 + 4);
-        delay(5000);
+        eeWrite(iwashere, count * 12 + 4);
+        delay(1000);
         eeWrite(convTime(getTime()), count * 12 + 8);
-        delay(5000);
+        delay(1000);
         count++;
 
         if (newest_addr < 49)
@@ -272,9 +299,9 @@ void meteringMode(void){
         else
             newest_addr++;
 #endif
-        clearLine2();
-        lcdIntPrint(pulse_width);
-        delay(5000);
+        //clearLine2();
+        //lcdIntPrint(pulse_width);
+        //delay(5000);
     }
 }
 
@@ -323,6 +350,10 @@ void dataDispMode(void){
                 if (half)
                     continue;
                 half = 1; 
+            }
+            else if (key_val == 10){
+                setIsPressed(0);
+                return;
             }
             printDataPoint(cur_addr, half);
             setIsPressed(0);
