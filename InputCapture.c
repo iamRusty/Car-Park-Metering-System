@@ -18,7 +18,7 @@
 #include "include/local_rtcc.h"
 
 unsigned int Capture1, Capture2;
-
+int ctr=0;
 void __attribute__ ((interrupt, auto_psv)) _IC1Interrupt(void);
 
 void setup()
@@ -69,7 +69,7 @@ void timerInit()
 int main(void) {
     
     unsigned int width, width2, width_diff;
-    int ctr=0;
+    
     timerInit();
     incapInit();
     
@@ -85,7 +85,7 @@ int main(void) {
             setCursor(0xC0);
             lcdIntPrint(width2);
             lcdPrint("  ");
-            lcdIntPrint(width1)
+            lcdIntPrint(width);
             ctr=0;
         }
         
