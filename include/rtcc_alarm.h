@@ -20,7 +20,7 @@
  */
 
 /* 
- * File: rtcc.h  
+ * File: alarm_rtcc.h  
  * Author: Rusty Mina (rusty.mina@eee.upd.edu.ph)
            Owen Cabuyadao (jbcabuyadao@up.edu.ph)
  * Comments:
@@ -29,8 +29,8 @@
 
 // This is a guard condition so that contents of this file are not included
 // more than once.  
-#ifndef __RTCC_CCP_COM__PLEX_
-#define	__RTCC_CCP_COM__PLEX_
+#ifndef __RTCC_CCP_COM__PLEX_ALARM__
+#define	__RTCC_CCP_COM__PLEX_ALARM__
 #endif
 
 #include <xc.h> // include processor files - each processor file is guarded.
@@ -51,5 +51,8 @@ typedef  struct {
     unsigned short alrm_rtcc_year;
 } alrm_rtcc_t;
 
-void alrmInit();
+void alarmInit();
+void disableAlarm();
+void enableAlarm();    
+
 //void __attribute__((interrupt,auto_psv)) _RTCCInterrupt(void);

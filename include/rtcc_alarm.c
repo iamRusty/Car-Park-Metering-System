@@ -14,9 +14,9 @@
 
 
 
-void alrmInit()
+void alarmInit()
 {
-    ALCFGRPTbits.AMASK = 1; //alarm every second
+    ALCFGRPTbits.AMASK = 3; //alarm every minute
     
     //two lines below allow for indefinite alarm
     ALCFGRPTbits.CHIME = 1;
@@ -49,3 +49,11 @@ void alrmInit()
 //    IFS3bits.RTCIF = 0; //clear flag
 //    
 //}
+
+void disableAlarm(){
+    ALCFGRPTbits.ALRMEN = 0; //disable alarm
+}
+
+void enableAlarm(){
+    ALCFGRPTbits.ALRMEN = 1; //enable alarm
+}

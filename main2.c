@@ -15,6 +15,7 @@
 #include "include/keypad.h"
 #include "include/local_rtcc.h"
 #include "include/i2c.h"
+#include "include/rtcc_alarm.h"
 
 // Main Functions
 void meteringMode(void);
@@ -33,9 +34,12 @@ void getStartTime(void);
 rtcc_t parseStartTime(void);
 void displayEETime(long input);
 void displayRTCCTime(rtcc_t input);
+int minusTime(rtcc_t input1, rtcc_t input2);
 long floatToInt(float f);
 float intToFloat(long i);
-
+void getPulseWidth(void);
+void getHigh(void);
+void getLow(void);
 
 // EEPROM Functions
 void eeWrite(long data, int address);
@@ -53,6 +57,16 @@ typedef union fi_t{
 int counter, newest_addr, oldest_addr;
 char start_time[17] = "__:__ __/__/20__";
 int data_count = 0; // must be 50
+int pulse_width = 0;
+int tagalmo = 0;
+int rtcc_flag=0;
+
+void __attribute__((interrupt,auto_psv)) _RTCCInterrupt(void)
+{
+    rtcc_flag=1; //set flag
+    IFS3bits.RTCIF = 0; //clear flag    
+}
+
 
 int main(void) {
 
@@ -63,15 +77,34 @@ int main(void) {
     i2c_init();
     keypadInit();
     rtccInit();
-
+    alarmInit();
+    disableAlarm();
+    
     // Main Loop
-#if 1
+#if 0
     getStartTime();
     setTime(parseStartTime());
     askRate();
-    while(1){}
+    clearLine2();
+    clearLine1();
+    countData();
+    findOldNew();
+    lcdIntPrint(newest_addr); delay(2000);
+    while(1){
+        meteringMode();
+        //dataDispMode();
+    }
 #endif    
     
+#if 0
+    countData();
+    findOldNew();
+    dataDispMode();
+#endif
+    
+#if 1
+    meteringMode();
+#endif
 // Get Start Time
 #if 0
     getStartTime();
@@ -190,18 +223,58 @@ int main(void) {
 } 
 
 void meteringMode(void){
+    lcdPrint("Ruler Mode");
+    
+    // Get Rate from EEPROM
     long temp;
     eeRead(&temp, 0x1FFA);
     float rate = intToFloat(temp);
-    
+    lcdFloatPrint(rate);
+    delay(5000);
+
     int count = 0;
     while(1){
-        eeWrite(floatToInt(rate) * count, count * 12 + 0);
+        
+        // Blocking for car presence
+        getPulseWidth();
+#if 1
+        if (pulse_width > 2000)
+            continue;
+        else {
+            tagalmo = 0;
+            enableAlarm();
+            while(1) {
+                if (rtcc_flag){
+                    tagalmo++;
+                    rtcc_flag = 0;
+                    clearLine1();
+                    lcdPrint("Utang: "); lcdFloatPrint(rate * (tagalmo));
+                }
+                getPulseWidth();
+                if (pulse_width < 2000)
+                    continue;
+                else
+                    break;
+            }
+        }
+        disableAlarm();
+        clearLine1();
+        lcdIntPrint(count);
+        eeWrite(floatToInt(rate * (tagalmo+1)) , count * 12 + 0);
         eeWrite(convTime(getTime()), count * 12 + 4);
         delay(5000);
         eeWrite(convTime(getTime()), count * 12 + 8);
         delay(5000);
         count++;
+
+        if (newest_addr < 49)
+            newest_addr = 0;
+        else
+            newest_addr++;
+#endif
+        clearLine2();
+        lcdIntPrint(pulse_width);
+        delay(5000);
     }
 }
 
@@ -209,7 +282,7 @@ void dataDispMode(void){
     int cur_addr = 0;
     int key_val, half = 0;
     
-    newest_addr = 3;
+    //newest_addr = 3;
     
     printDataPoint(0, 0);
     while(1){
@@ -265,7 +338,7 @@ void printDataPoint(int address, int half){
     else 
         eeRead(&l2, address * 12 + 4);
     
-    setCursor(0x80);
+    clearLine1();
     lcdFloatPrint(intToFloat(l1));
     setCursor(0xC0);
     displayEETime(l2);
@@ -318,18 +391,6 @@ void findOldNew(void){
         }
         else 
             oldest_addr = count;
-    }
-}
-
-void getHigh(){
-    while(PORTAbits.RA4 == 0){
-        
-    }
-}
-
-void getLow(){
-    while(PORTAbits.RA4 == 1){
-        counter++;
     }
 }
 
@@ -738,4 +799,22 @@ long floatToInt(float f){
     fi_t fi;
     fi.f = f;
     return fi.i;
+}
+
+void getPulseWidth(){
+    getHigh();
+    pulse_width = 0;
+    getLow();
+}
+
+void getHigh(){
+    while(PORTAbits.RA4 == 0){
+        
+    }
+}
+
+void getLow(){
+    while(PORTAbits.RA4 == 1){
+        pulse_width++;
+    }
 }
