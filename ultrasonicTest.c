@@ -10,12 +10,14 @@
 #pragma config PLL96MHZ=OFF, PLLDIV=NODIV
 #pragma config SOSCSEL=IO
 #pragma config I2C1SEL=PRI 
+#pragma config RTCOSC = LPRC
 
 
 #include "xc.h"
 #include "include/delay.h"
 #include "include/lcd_4bit.h"
 #include "include/local_rtcc.h"
+
 void getHigh(void);
 void getLow(void);
 void theresCar(short state);
@@ -39,13 +41,24 @@ void initTime()
 }
 int main(void) {
     TRISA = 0xFFFF;
-    TRISB = 0;
-    AD1PCFG = 0xFDFF;
-    lcdInit();
+    TRISB = 0x1340;
+    AD1PCFG = 0xFFFF;
+ 
+#if 0
+    while(1){
+            LATBbits.LATB15 = 1; //GREEN LED IS ON
+            LATBbits.LATB11 = 0; //RED LED IS OFF
+            delay(1000);
+            LATBbits.LATB15 = 0; //GREEN LED IS ON
+            LATBbits.LATB11 = 1; //RED LED IS OFF
+            delay(1000);            
+    }
+#endif
+    
     lcdPrint("helloworld");
     setCursor(0xC0);
-    PORTA = 0xFFFF;
-    initTime();
+    //PORTA = 0xFFFF;
+    //initTime();
     delay(1000);
     /*while(1){
         clearLine2(); 
@@ -53,32 +66,52 @@ int main(void) {
         count = 0;
         getLow();
         lcdIntPrint(count);
-    }*/
-    if (count<2500)//car is parked
-    {
-        LATBbits.LATB15 = 0; //GREEN LED IS ON
-        LATBbits.LATB11 = 1; //RED LED IS OFF
-        
-        if(press == 0)
+        }*/
+    while(1){
+        clearLine2(); 
+        getHigh();
+
+        count = 0;
+
+        getLow();
+        //lcdPrint("hello");
+        //while(1){}
+        lcdIntPrint(count);
+        delay(2000);
+
+        if (count < 2500){
+
+            lcdPrint("Parked");
+            delay(1000);
+            LATBbits.LATB15 = 1; //GREEN LED IS ON
+            LATBbits.LATB11 = 0; //RED LED IS OFF
+            delay(1000);
+#if 0   
+            if(parked == 0)
+            {
+                test2 = getTime();
+                //write this to i2c
+                parked = 1;//set flag
+            }
+    #endif
+        }
+        else//space is free
         {
-            test2 = getTime();
-            //write this to i2c
-            press = 1;//set flag
+            lcdPrint("Not Parked");
+
+            LATBbits.LATB15 = 0; //GREEN LED IS OFF
+            LATBbits.LATB11 = 1; //RED LED IS ON
+            delay(1000);
+#if 0
+            if(parked == 1)
+            {
+                test2 = getTime(); //get end time
+                //write this to i2c
+                parked = 0; //clear flag
+            }
+    #endif
         }
     }
-    else//space is free
-    {
-        LATBbits.LATB15 = 1; //GREEN LED IS OFF
-        LATBbits.LATB11 = 0; //RED LED IS ON
-        
-        if(press == 1)
-        {
-            test2 = getTime(); //get end time
-            //write this to i2c
-            press = 0; //clear flag
-        }
-    }
-            
     return 0;
 }
 
