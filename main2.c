@@ -106,9 +106,9 @@ int main(void) {
     lcdIntPrint(newest_addr);
     delay(2000);
     while(1){
+        findOldNew();
         meteringMode();
-        //countData();
-        //findOldNew();
+        findOldNew();
         dataDispMode();
     }    
 #endif    
@@ -209,7 +209,7 @@ void dataDispMode(void){
                 if (cur_addr == 49){
                     cur_addr = 0;
                 }
-                else if (cur_addr >= newest_addr)
+                else if ((cur_addr >= newest_addr)&&(data_count < 50))
                     cur_addr = 0;
                 else
                     cur_addr++;
