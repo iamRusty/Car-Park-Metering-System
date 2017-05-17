@@ -58,7 +58,7 @@ int counter, newest_addr, oldest_addr;
 char start_time[17] = "__:__ __/__/20__";
 int data_count = 0; // must be 50
 int pulse_width = 0;
-int tagalmo = 0;
+int car_minute = 0;
 int rtcc_flag=0;
 
 void __attribute__((interrupt,auto_psv)) _RTCCInterrupt(void)
@@ -97,146 +97,26 @@ int main(void) {
         dataDispMode();
     }
 #endif    
-    
-#if 1
-    countData();
-    findOldNew();
-    dataDispMode();
-    clearLine1();
-    lcdPrint("helloworld");
-#endif
-    
-#if 0
-    meteringMode();
-#endif
-    
-#if 1
-    while(1){
-        meteringMode();
-        countData();
-        findOldNew();
-        dataDispMode();
-    }    
-#endif
-// Get Start Time
-#if 0
-    getStartTime();
-    setTime(parseStartTime());
-    rtcc_t trial_time;
-    while(1){
-        trial_time = getTime();
-        setCursor(0x80);
-        displayRTCCTime(trial_time);
-        setCursor(0xC0);
-        lcdTimePrint(trial_time.rtcc_sec);
-        delay(70000);
-    }
-    trial_time = getTime();
-    setCursor(0x80);
-    lcdTimePrint(trial_time.rtcc_sec);
-    //displayRTCCTime(trial_time);    
-    while(1){}
-#endif    
 
-
-// Ask Rate    
-#if 0
-    float asd;
-    eeWrite(0, 0x1FFA);
-    asd = askRate();
-    while(1){}
-#endif   
-    
-//Data Display Mode TEST
-#if 0
-    rtcc_t rt, rt2;
-    rt.rtcc_hour = 11;
-    rt.rtcc_mday = 25;
-    rt.rtcc_min = 21;
-    rt.rtcc_mon = 12;
-    rt.rtcc_sec = 00;
-    rt.rtcc_wday = 0;
-    rt.rtcc_year = 16;
-    rt2.rtcc_hour = 10;
-    rt2.rtcc_mday = 23;
-    rt2.rtcc_min = 13;
-    rt2.rtcc_mon = 11;
-    rt2.rtcc_sec = 00;
-    rt2.rtcc_wday = 0;
-    rt2.rtcc_year = 17;
-    
-    setTime(rt2);
-    eeWrite(floatToInt(3.25), 0 * 4);
-    eeWrite(convTime(getTime()), 1 * 4);
-    eeWrite(convTime(rt2), 2 * 4);
-    eeWrite(floatToInt(5.25), 3 * 4);
-    eeWrite(convTime(getTime()), 4 * 4);
-    eeWrite(convTime(rt2), 5 * 4);
-    eeWrite(floatToInt(6.25), 6 * 4);
-    eeWrite(convTime(rt), 7 * 4);
-    eeWrite(convTime(rt2), 8 * 4);
-    eeWrite(floatToInt(7.80), 9 * 4);
-    eeWrite(convTime(getTime()), 10 * 4);
-    eeWrite(convTime(rt2), 11 * 4);
-    
-    //dataDispMode();
-    //while(1){}
-#endif
-
-    // EEPROM reformat TEST
-#if 0
-    //eeClean(0);
-    //dataDispMode();
-#endif     
-    
-    // Ask Rate TEST
 #if 1
-    //eeWrite(0, 0x1FFA);
-    askRate();
-    clearLine2(); lcdPrint("Working!!! 3x");
-    while(1){}
-#endif    
-    
-    // Counting Datapoints TEST
-#if 0
-    lcdPrint("helloworld ");
     countData();
     lcdIntPrint(data_count);
-    //while(1){}
-#endif     
-    
-    // Find Newest and Oldest address TEST
-#if 1
+    delay(2000);
     findOldNew();
-    setCursor(0xC0);
-    lcdIntPrint(oldest_addr); lcdPrint(" ");
     lcdIntPrint(newest_addr);
-    while(1){}
-#endif
-
-    long hello2 = 67;
-    eeWrite(70, 0);
-    eeWrite(69, 1);
-    eeWrite(70, 2);
-    eeWrite(70, 3);
-    eeRead(&hello2, 0);
-    lcdPrint(&hello2);
-    while(1){}
-    float f = 3.5;
-    fi_t temp, temp2;
-    temp.f = f;
-    eeWrite(temp.i, 0x1000);
-    eeRead(&hello2, 0x1000);
-    temp2.i = hello2;
-    lcdFloatPrint(temp2.f);
-    
-    lcdPrint(&hello2);
-    while(1){}
+    delay(2000);
+    while(1){
+        meteringMode();
+        //countData();
+        //findOldNew();
+        dataDispMode();
+    }    
+#endif    
     return 0;
 } 
 
 void meteringMode(void){
-    lcdPrint("Ruler Mode");
+    lcdPrint("Ruler");
     
     // Get Rate from EEPROM
     long temp, iwashere;
@@ -245,21 +125,37 @@ void meteringMode(void){
     lcdFloatPrint(rate);
     delay(1000);
 
-    int count = 0;
     int key_val, alisnaboi = 0;
     while(!alisnaboi){
         
         // Blocking for car presence
         getPulseWidth();
-#if 1
+
+        if (getIsPressed()){
+            key_val = getKeyValue();
+            if (key_val == 11){
+                alisnaboi = 1;
+                setIsPressed(0);
+                return;
+            }   
+        }        
+#if 1   
         if (pulse_width > 2000)
             continue;
         else {
-            tagalmo = 0;
+
+            if (newest_addr == 49)
+                newest_addr = 0;
+            else
+                newest_addr++;            
+
+            car_minute = 0;
             enableAlarm();
             clearLine1();
-            lcdPrint("Utang: "); lcdFloatPrint(rate * (tagalmo + 1));
+            lcdPrint("Fee: "); lcdFloatPrint(rate * (car_minute + 1));
+            clearLine2(); lcdPrint("Car Parked");
             iwashere = convTime(getTime());
+            
             while(1) {
                 if (getIsPressed()){
                     key_val = getKeyValue();
@@ -267,15 +163,14 @@ void meteringMode(void){
                         alisnaboi = 1;
                         setIsPressed(0);
                         break;
-                    }
-                        
+                    }   
                 }
                     
                 if (rtcc_flag){
-                    tagalmo++;
+                    car_minute++;
                     rtcc_flag = 0;
                     clearLine1();
-                    lcdPrint("Utang: "); lcdFloatPrint(rate * (tagalmo));
+                    lcdPrint("Fee: "); lcdFloatPrint(rate * (car_minute));
                 }
                 getPulseWidth();
                 if (pulse_width < 2000)
@@ -284,32 +179,23 @@ void meteringMode(void){
                     break;
             }
         }
+        clearLine2(); lcdPrint("No Park");
         disableAlarm();
+        rtcc_flag = 0;
         clearLine1();
-        lcdIntPrint(count);
-        eeWrite(floatToInt(rate * (tagalmo+1)) , count * 12 + 0);
-        eeWrite(iwashere, count * 12 + 4);
+        lcdIntPrint(newest_addr);
+        eeWrite(floatToInt(rate * (car_minute+1)) , newest_addr * 12 + 0);
+        eeWrite(iwashere, newest_addr * 12 + 4);
         delay(1000);
-        eeWrite(convTime(getTime()), count * 12 + 8);
+        eeWrite(convTime(getTime()), newest_addr * 12 + 8);
         delay(1000);
-        count++;
-
-        if (newest_addr < 49)
-            newest_addr = 0;
-        else
-            newest_addr++;
 #endif
-        //clearLine2();
-        //lcdIntPrint(pulse_width);
-        //delay(5000);
     }
 }
 
 void dataDispMode(void){
     int cur_addr = 0;
     int key_val, half = 0;
-    
-    //newest_addr = 3;
     
     printDataPoint(0, 0);
     while(1){
@@ -320,15 +206,22 @@ void dataDispMode(void){
         else {
             key_val = getKeyValue();
             if (key_val == 2){
-                if (cur_addr + 1 == data_count)
+                if (cur_addr == 49){
+                    cur_addr = 0;
+                }
+                else if (cur_addr >= newest_addr)
                     cur_addr = 0;
                 else
                     cur_addr++;
                 half = 0;
             }
             else if (key_val == 8){
-                if (cur_addr == 0)
-                    cur_addr = data_count - 1;
+                if (cur_addr == 0){
+                    if (data_count >= 50)
+                        cur_addr = 49;
+                    else
+                        cur_addr = newest_addr;
+                }
                 else
                     cur_addr--;
                 half = 0;
@@ -370,7 +263,7 @@ void printDataPoint(int address, int half){
         eeRead(&l2, address * 12 + 4);
     
     clearLine1();
-    lcdFloatPrint(intToFloat(l1));
+    lcdIntPrint(address); lcdPrint(" "); lcdFloatPrint(intToFloat(l1));
     setCursor(0xC0);
     displayEETime(l2);
 }
@@ -416,12 +309,12 @@ void findOldNew(void){
     }
     else {
         newest_addr = count - 1;
-        if (data_count < 51){
-            oldest_addr = 0;
-            eeClean(count * 3); // Because it's a fallacy
+        if (data_count >= 50){
+            oldest_addr = newest_addr + 1;
+            //eeClean(count * 3); // Because it's a fallacy
         }
         else 
-            oldest_addr = count;
+            oldest_addr = 0;
     }
 }
 

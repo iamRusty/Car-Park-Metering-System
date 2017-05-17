@@ -95,7 +95,7 @@ int main(void) {
     test.alrm_rtcc_min = 6;
     test.alrm_rtcc_sec = 17;
     
-    alrmInit();
+    alarmInit();
     
     while(1)
     {

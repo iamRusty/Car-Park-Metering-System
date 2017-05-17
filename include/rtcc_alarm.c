@@ -16,7 +16,7 @@
 
 void alarmInit()
 {
-    ALCFGRPTbits.AMASK = 3; //alarm every minute
+    ALCFGRPTbits.AMASK = 1; //alarm every minute
     
     //two lines below allow for indefinite alarm
     ALCFGRPTbits.CHIME = 1;
