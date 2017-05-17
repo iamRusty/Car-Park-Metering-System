@@ -72,6 +72,7 @@ int main(void) {
 
     TRISA = 0xFFFF;
     TRISB = 0x1340;
+    TRISBbits.TRISB11 = 0;
     AD1PCFG = 0xFDFF;
     lcdInit();
     i2c_init();
@@ -80,38 +81,16 @@ int main(void) {
     alarmInit();
     disableAlarm();
     
-    // Main Loop
-#if 0
     getStartTime();
     setTime(parseStartTime());
-    askRate();
-    clearLine2();
-    clearLine1();
+    askRate(); 
     countData();
-    findOldNew();
-    lcdIntPrint(newest_addr); delay(2000);
-    while(1){
-        meteringMode();
-        countData();
-        findOldNew();
-        dataDispMode();
-    }
-#endif    
-
-#if 1
-    countData();
-    lcdIntPrint(data_count);
-    delay(2000);
-    findOldNew();
-    lcdIntPrint(newest_addr);
-    delay(2000);
     while(1){
         findOldNew();
         meteringMode();
         findOldNew();
         dataDispMode();
-    }    
-#endif    
+    }     
     return 0;
 } 
 
@@ -139,11 +118,11 @@ void meteringMode(void){
                 return;
             }   
         }        
-#if 1   
+   
         if (pulse_width > 2000)
             continue;
         else {
-
+            
             if (newest_addr == 49)
                 newest_addr = 0;
             else
@@ -155,8 +134,10 @@ void meteringMode(void){
             lcdPrint("Fee: "); lcdFloatPrint(rate * (car_minute + 1));
             clearLine2(); lcdPrint("Car Parked");
             iwashere = convTime(getTime());
-            
+
             while(1) {
+                LATBbits.LATB11 = 0;    // Red Light On
+                LATBbits.LATB15 = 1;    // Green Light Off
                 if (getIsPressed()){
                     key_val = getKeyValue();
                     if (key_val == 11){
@@ -178,18 +159,22 @@ void meteringMode(void){
                 else
                     break;
             }
+            
         }
-        clearLine2(); lcdPrint("No Park");
+        LATBbits.LATB11 = 1;    // Red Light Off
+        LATBbits.LATB15 = 0;    // Green Light On
+        //delay(5000);
+        clearLine1(); lcdPrint("FinalFee:"); lcdFloatPrint(rate * (car_minute + 1));
+        clearLine2(); lcdPrint("No Park "); lcdIntPrint(newest_addr);
         disableAlarm();
         rtcc_flag = 0;
-        clearLine1();
-        lcdIntPrint(newest_addr);
         eeWrite(floatToInt(rate * (car_minute+1)) , newest_addr * 12 + 0);
         eeWrite(iwashere, newest_addr * 12 + 4);
-        delay(1000);
+        //delay(1000);
         eeWrite(convTime(getTime()), newest_addr * 12 + 8);
-        delay(1000);
-#endif
+        //delay(1000);
+        LATBbits.LATB11 = 1;    // Red Light Off
+        LATBbits.LATB15 = 0;    // Green Light On
     }
 }
 
@@ -315,17 +300,6 @@ void findOldNew(void){
         }
         else 
             oldest_addr = 0;
-    }
-}
-
-void theresCar(short state){
-    if (!state){
-        LATBbits.LATB11 = 1;
-        LATBbits.LATB15 = 0;
-    }
-    else {
-        LATBbits.LATB11 = 0;
-        LATBbits.LATB15 = 1;
     }
 }
 
